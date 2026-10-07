@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "seed": 88,
+  "difficulty": "survivor",
+  "day": 11,
+  "time": 420,
+  "location": "clearing",
+  "health": 100,
+  "energy": 88,
+  "food": 78,
+  "water": 72,
+  "warmth": 82,
+  "wet": 0,
+  "sickness": 0,
+  "wound": 0,
+  "weather": "rain",
+  "forecast": "cloudy",
+  "inv": {
+    "wood": 4,
+    "stone": 3,
+    "fiber": 3,
+    "water": 3,
+    "ration": 4,
+    "bandage": 1
+  },
+  "tools": {},
+  "camps": {
+    "clearing": {
+      "structures": [
+        "shelter",
+        "firepit"
+      ],
+      "fire": 240,
+      "cache": {},
+      "stock": 6
+    },
+    "forest": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    },
+    "river": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    },
+    "rocks": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    },
+    "ruins": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    },
+    "valley": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    },
+    "ridge": {
+      "structures": [],
+      "fire": 0,
+      "cache": {},
+      "stock": 6
+    }
+  },
+  "visited": [
+    "clearing"
+  ],
+  "searched": [],
+  "logs": [
+    {
+      "day": 1,
+      "time": 420,
+      "text": "คุณหลงจากเส้นทางเดินป่า ตั้งหลัก หาแหล่งน้ำ และเตรียมที่พักก่อนมืด",
+      "tone": "story"
+    }
+  ],
+  "event": "snake",
+  "ended": false,
+  "won": false,
+  "signal": false,
+  "actions": 0,
+  "milestones": {},
+  "lastResult": ""
+}

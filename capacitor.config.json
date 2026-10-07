@@ -1,0 +1,11 @@
+{
+  "appId": "io.github.econds.wildland",
+  "appName": "WILDLAND",
+  "webDir": "www",
+  "plugins": {
+    "SystemBars": {
+      "style": "DARK",
+      "initialViewportFitValueHint": "cover"
+    }
+  }
+}

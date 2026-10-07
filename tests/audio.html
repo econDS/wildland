@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>WILDLAND audio checks</title>
+<style>body{font:14px system-ui;background:#121813;color:#d2dfbd;padding:30px}li{margin:6px}h1{font-size:24px}</style>
+<h1>Web Audio rendering checks</h1><p id="status">Rendering…</p><ul id="results"></ul>
+<script src="../src/audio.js"></script><script>
+(async()=>{
+const cases=['wood','stone','fiber','forage','water','fish','explore','travel','dismantle','fire','boil','cook','dry','stash','take','drop','rest','sleep','signal','encounter','error','win','lose','preview'].map(name=>[name,{}]);
+cases.push(['craft',{camp:true}],['craft',{medical:true}],['craft',{}],['consume',{itemType:'food'}],['consume',{itemType:'water'}],['consume',{itemType:'medical'}],['hunt',{gained:true}],['hunt',{gained:false}],['choice',{hurt:true}],['choice',{hurt:false}]);
+let failures=0;
+async function render(label,setup,expectSilence=false){
+const ctx=new OfflineAudioContext(1,32000,16000),audio=createActionAudio();audio.attach(ctx);audio.setEnabled(true);setup(audio);
+const buffer=await ctx.startRendering(),samples=buffer.getChannelData(0);let peak=0,power=0,tail=0;
+for(let i=0;i<samples.length;i++){peak=Math.max(peak,Math.abs(samples[i]));power+=samples[i]*samples[i];if(i>samples.length-800)tail=Math.max(tail,Math.abs(samples[i]));}
+const ok=Number.isFinite(power)&&peak<.99&&(expectSilence?peak===0:power>0)&&tail<.001;
+if(!ok)failures++;
+const li=document.createElement('li');li.textContent=`${ok?'PASS':'FAIL'} ${label}: peak ${peak.toFixed(3)}, tail ${tail.toFixed(5)}`;document.querySelector('#results').append(li);
+}
+for(const [name,detail]of cases)await render(name+' '+JSON.stringify(detail),a=>a.play(name,detail));
+await render('muted bus',a=>{a.setEnabled(false);a.play('wood');},true);
+await render('zero volume',a=>{a.setVolume(0);a.play('wood');},true);
+await render('rapid overlapping actions',a=>{for(let i=0;i<30;i++)a.play('stone');});
+await render('mute cancels pending voices',a=>{a.play('signal');a.setEnabled(false);a.setEnabled(true);a.play('preview');});
+async function renderNature(label,weather,volume,enabled,expectSilence=false){
+const ctx=new OfflineAudioContext(1,32000,16000),audio=createNatureAudio();
+audio.setVolume(volume);audio.attach(ctx);audio.update(weather);audio.setEnabled(enabled);
+const buffer=await ctx.startRendering(),samples=buffer.getChannelData(0);let peak=0,power=0;
+for(const sample of samples){peak=Math.max(peak,Math.abs(sample));power+=sample*sample;}
+const ok=Number.isFinite(power)&&peak<.99&&(expectSilence?peak===0:power>0);
+if(!ok)failures++;
+const li=document.createElement('li');li.textContent=`${ok?'PASS':'FAIL'} ${label}: peak ${peak.toFixed(3)}`;document.querySelector('#results').append(li);
+}
+await renderNature('clear ambience','clear',.65,true);
+await renderNature('storm ambience','storm',.65,true);
+await renderNature('nature volume zero','rain',0,true,true);
+await renderNature('nature muted','storm',.65,false,true);
+document.querySelector('#status').textContent=`${cases.length+8} checks completed; ${failures} failed`;
+})().catch(e=>{document.querySelector('#status').textContent='ERROR: '+e.stack;});
+</script></html>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><meta name="theme-color" content="#111713"><meta name="description" content="WILDLAND — เกมเอาตัวรอดในป่าลึก วางแผน สำรวจ สร้างแคมป์ และหาทางกลับบ้าน">
+<title>WILDLAND — 30 วันในป่าลึก</title><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/icon.svg" type="image/svg+xml"><link rel="icon" href="./icons/favicon-32.png" sizes="32x32" type="image/png"><link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="WILDLAND">
+<link rel="stylesheet" href="./styles/main.css">
+</head>
+<body>
+<a class="skip-link" href="#activityContent">ข้ามไปยังกิจกรรม</a>
+<header class="app-header">
+<div class="header-row"><a class="wordmark" href="#" id="homeLink"><span class="brand-icon" id="homeMark"></span>WILDLAND</a><div class="hud" id="topMeta"></div><div class="top-controls"><span class="save-indicator" id="saveIndicator"><i></i> บันทึกอัตโนมัติ</span><button class="icon-button" id="helpButton" aria-label="คู่มือการเอาตัวรอด" title="คู่มือ (?)"></button><button class="icon-button" id="soundButton" aria-label="เปิดเสียงธรรมชาติ" title="เปิดเสียงธรรมชาติ"></button><button class="icon-button" id="settingsButton" aria-label="ตั้งค่าและจัดการเซฟ" title="ตั้งค่าและจัดการเซฟ"></button></div></div>
+<div class="mini-vitals" id="miniVitals" aria-label="สภาพร่างกายโดยย่อ"></div>
+<nav class="main-nav" id="mainNav" aria-label="เมนูหลัก"></nav>
+</header>
+<div class="layout">
+<main class="main-column">
+<div id="objective"></div>
+<section class="landscape" aria-label="ภาพพื้นที่ปัจจุบัน"><canvas id="scene" aria-hidden="true"></canvas><div class="scene-grain"></div><div class="scene-top"><span class="location-chip" id="biomeLabel"></span><span class="scene-coord" id="sceneCoord"></span></div><div class="scene-bottom"><div><div class="eyebrow" id="locationIndex"></div><h2 id="locationName"></h2><p id="locationDescription"></p></div><div class="scene-weather" id="sceneWeather"></div></div></section>
+<section class="activity-section"><div class="activity-header"><h1 id="activityTitle"></h1><span id="timeRemaining"></span></div><div id="activityContent" tabindex="-1"></div></section>
+</main>
+<aside class="side-column" aria-label="สถานะผู้รอดชีวิต">
+<section class="panel survivor-panel"><div class="panel-title"><h2>สภาพร่างกาย</h2><span class="micro" id="conditionLabel"></span></div><div id="vitals"></div><div id="conditions"></div><button class="button rest-button" id="sleepButton"></button></section>
+<section class="panel camp-panel"><div class="panel-title"><h2>แคมป์ของคุณ</h2><span class="micro" id="campSite"></span></div><div id="campOverview"></div></section>
+<section class="panel journal-panel"><div class="panel-title"><h2>บันทึกล่าสุด</h2><button class="text-button" id="allLogs">ดูทั้งหมด <span>→</span></button></div><div id="recentLogs" aria-live="polite"></div></section>
+</aside>
+</div>
+<footer><span><i class="live-dot"></i> OFFLINE EXPEDITION <b>•</b> <span id="difficultyLabel"></span></span><span>เดินให้ช้า คิดให้ไกล อยู่ให้รอด.</span><span>WILDLAND <b>/</b> 3.0</span></footer>
+<div id="toast" role="status" aria-live="polite"></div>
+<dialog id="modal"><div class="modal-head"><div><div class="eyebrow" id="modalEyebrow">FIELD NOTES</div><h2 id="modalTitle"></h2></div><button class="icon-button" id="closeModal" aria-label="ปิดหน้าต่าง"></button></div><div id="modalBody"></div></dialog>
+<input type="file" id="importFile" accept="application/json,.json" hidden>
+<script src="./src/platform.js"></script><script src="./src/data.js"></script><script src="./src/world.js"></script><script src="./src/engine.js"></script><script src="./src/advice.js"></script><script src="./src/scene.js"></script><script src="./src/audio.js"></script><script src="./src/world-ui.js"></script><script src="./src/game.js"></script>
+</body></html>

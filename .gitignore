@@ -1,0 +1,18 @@
+# Dependencies and build output
+node_modules/
+www/
+dist/
+
+# Local-only files (kept on this machine, never published)
+.private/
+.claude/
+
+# Signing keys
+*.jks
+*.keystore
+keystore.properties
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log

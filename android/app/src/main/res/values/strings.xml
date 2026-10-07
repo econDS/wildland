@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">WILDLAND</string>
+    <string name="title_activity_main">WILDLAND</string>
+    <string name="package_name">io.github.econds.wildland</string>
+    <string name="custom_url_scheme">io.github.econds.wildland</string>
+</resources>
