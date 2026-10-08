@@ -24,7 +24,7 @@ const previousRaw=E.count(G,'raw');
 const hint=SurvivalAdvice.next(G),result=E.action(G,type,id,quantity);
 if(!result.ok){actionAudio.play('error');toast(result.message);return;}
 if(hint&&!hint.critical&&(hint.action===type||(hint.item&&hint.item===id)||(hint.sleep&&type==='sleep')||(hint.nav==='map'&&type==='travel')))learn('topics',hint.topic);
-actionAudio.play(({investigate:'explore',repair:'craft',reinforce:'craft',clearTrail:'wood',filter:'water'})[type]||type,{camp:D.recipes[id]?.group==='camp',medical:D.recipes[id]?.group==='medical',itemType:D.items[id]?.type,gained:E.count(G,'raw')>previousRaw});
+actionAudio.play(({investigate:'explore',clearTrail:'clear'})[type]||type,{recipe:type==='craft'?id:undefined,item:id,itemType:D.items[id]?.type,site:G.location,gained:E.count(G,'raw')>previousRaw});
 if(G.ended)actionAudio.play(G.won?'win':'lose');else if(G.event)actionAudio.play('encounter');
 save();render();toast(result.message);if(G.event)showEvent();else if(G.ended)showEnd();
 }
@@ -212,7 +212,7 @@ async toggle(){
 scheduleBird(){
   clearTimeout(this.timer);
   if(!this.active)return;
-  this.timer=setTimeout(()=>{if(!document.hidden)natureAudio.bird(G);this.scheduleBird();},5000+Math.random()*7000);
+  this.timer=setTimeout(()=>{if(!document.hidden)natureAudio.ambient(G);this.scheduleBird();},5000+Math.random()*7000);
 },
 update(){$('soundButton').innerHTML=icon(this.active?'sound':'muted');$('soundButton').setAttribute('aria-label',this.active?'ปิดเสียงเกม':'เปิดเสียงเกม');$('soundButton').title=this.active?'ปิดเสียงเกม':'เปิดเสียงเกม';$('soundButton').setAttribute('aria-pressed',String(this.active));}
 };
@@ -223,7 +223,7 @@ if(b.dataset.tipDismiss){learn('topics',b.dataset.tipDismiss);return render();}
 if(b.hasAttribute('data-coach-dismiss')){learn('tabs',tab);return renderActivity();}
 if(b.hasAttribute('data-tips-reset')){tips={topics:[],tabs:[]};saveTips();render();toast('จะแสดงคำแนะนำอีกครั้ง');return;}
 if(b.dataset.nav){const nav=b.dataset.nav,filter=b.dataset.navfilter;if(nav==='craft')craftFilter=filter||'camp';if(nav==='inventory')invFilter=filter||'all';if(b.dataset.navmap)mapSelected=b.dataset.navmap;if($('modal').open&&modalMode!=='event')closeModal();setTab(nav,{focus:true});const target=b.dataset.navaction?$('activityContent').querySelector(`[data-action="${b.dataset.navaction}"]${b.dataset.navactionid?`[data-id="${b.dataset.navactionid}"]`:''}`):b.dataset.navitem?$('activityContent').querySelector(`[data-use="${b.dataset.navitem}"], [data-item="${b.dataset.navitem}"], [data-id="${b.dataset.navitem}"]`):null;if(target){target.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});target.focus({preventScroll:true});}return;}
-if(b.dataset.tab)return setTab(b.dataset.tab);
+if(b.dataset.tab){if(b.dataset.tab!==tab)actionAudio.play('tab');return setTab(b.dataset.tab);}
 if(b.hasAttribute('data-open-sleep'))return showSleep();
 if(b.dataset.craftfilter){craftFilter=b.dataset.craftfilter;return renderActivity();}
 if(b.dataset.invfilter){invFilter=b.dataset.invfilter;return renderActivity();}

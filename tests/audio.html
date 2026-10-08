@@ -3,11 +3,14 @@
 <h1>Web Audio rendering checks</h1><p id="status">Rendering…</p><ul id="results"></ul>
 <script src="../src/audio.js"></script><script>
 (async()=>{
-const cases=['wood','stone','fiber','forage','water','fish','explore','travel','dismantle','fire','boil','cook','dry','stash','take','drop','rest','sleep','signal','encounter','error','win','lose','preview'].map(name=>[name,{}]);
-cases.push(['craft',{camp:true}],['craft',{medical:true}],['craft',{}],['consume',{itemType:'food'}],['consume',{itemType:'water'}],['consume',{itemType:'medical'}],['hunt',{gained:true}],['hunt',{gained:false}],['choice',{hurt:true}],['choice',{hurt:false}]);
+const cases=['wood','stone','fiber','forage','water','filter','fish','explore','travel','repair','reinforce','clear','dismantle','fire','boil','cook','dry','stash','take','drop','rest','sleep','signal','encounter','error','win','lose','preview','tab'].map(name=>[name,{}]);
+for(const recipe of ['shelter','firepit','bed','collector','rack','axe','spear','rod','coat','pack','medicine','bandage','unknown'])cases.push(['craft',{recipe}]);
+for(const item of ['water','dirty','berries','cooked','dried','ration','raw','medicine','bandage'])cases.push(['consume',{item}]);
+for(const site of ['clearing','forest','river','rocks','ruins','valley','ridge'])cases.push(['travel',{site}],['explore',{site}]);
+cases.push(['consume',{itemType:'food'}],['hunt',{gained:true}],['hunt',{gained:false}],['choice',{hurt:true}],['choice',{hurt:false}]);
 let failures=0;
 async function render(label,setup,expectSilence=false){
-const ctx=new OfflineAudioContext(1,32000,16000),audio=createActionAudio();audio.attach(ctx);audio.setEnabled(true);setup(audio);
+const ctx=new OfflineAudioContext(1,48000,16000),audio=createActionAudio();audio.attach(ctx);audio.setEnabled(true);setup(audio);
 const buffer=await ctx.startRendering(),samples=buffer.getChannelData(0);let peak=0,power=0,tail=0;
 for(let i=0;i<samples.length;i++){peak=Math.max(peak,Math.abs(samples[i]));power+=samples[i]*samples[i];if(i>samples.length-800)tail=Math.max(tail,Math.abs(samples[i]));}
 const ok=Number.isFinite(power)&&peak<.99&&(expectSilence?peak===0:power>0)&&tail<.001;
@@ -32,6 +35,23 @@ await renderNature('clear ambience','clear',.65,true);
 await renderNature('storm ambience','storm',.65,true);
 await renderNature('nature volume zero','rain',0,true,true);
 await renderNature('nature muted','storm',.65,false,true);
-document.querySelector('#status').textContent=`${cases.length+8} checks completed; ${failures} failed`;
+async function renderNatureBed(play,seconds){
+const ctx=new OfflineAudioContext(1,seconds*16000,16000),audio=createNatureAudio();audio.attach(ctx);audio.setEnabled(true);play(audio);
+const samples=(await ctx.startRendering()).getChannelData(0);let peak=0,power=0,bright=0;
+for(let i=0;i<samples.length;i++){peak=Math.max(peak,Math.abs(samples[i]));power+=samples[i]*samples[i];if(i){const d=samples[i]-samples[i-1];bright+=d*d;}}
+return {peak,power,bright};
+}
+// Accents play over a random wind bed (low frequencies only), so bird and cricket calls are detected by their high-frequency energy and thunder by total energy.
+async function renderAccent(label,play,low=false){
+// Short window for calls (a single whistle is tiny next to 4 s of wind); long for thunder.
+const seconds=low?4:1.5,bed=await renderNatureBed(()=>{},seconds),{peak,power,bright}=await renderNatureBed(play,seconds);
+const gain=low?power/bed.power:bright/bed.bright;
+const ok=Number.isFinite(power)&&peak<.99&&gain>1.3;if(!ok)failures++;
+const li=document.createElement('li');li.textContent=`${ok?'PASS':'FAIL'} ${label}: peak ${peak.toFixed(3)}, energy x${gain.toFixed(1)} over wind`;document.querySelector('#results').append(li);
+}
+for(let i=0;i<3;i++)await renderAccent('bird call '+(i+1),a=>a.bird(i));
+await renderAccent('night crickets',a=>a.cricket());
+await renderAccent('storm thunder',a=>a.thunder(),true);
+document.querySelector('#status').textContent=`${document.querySelectorAll('#results li').length} checks completed; ${failures} failed`;
 })().catch(e=>{document.querySelector('#status').textContent='ERROR: '+e.stack;});
 </script></html>
