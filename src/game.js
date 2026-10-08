@@ -7,8 +7,8 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&
 const time=n=>`${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;
 const duration=n=>n>=60?`${Math.floor(n/60)} ชม.${n%60?` ${n%60} น.`:''}`:`${n} น.`;
 const TIPS='wildland_tips_v1';
-let tips={topics:[],tabs:[]};
-try{const raw=JSON.parse(localStorage.getItem(TIPS)||'null');if(raw&&Array.isArray(raw.topics)&&Array.isArray(raw.tabs))tips={topics:raw.topics.map(String),tabs:raw.tabs.map(String)};}catch(e){}
+let tips={topics:[],tabs:[],navs:[]};
+try{const raw=JSON.parse(localStorage.getItem(TIPS)||'null');if(raw&&Array.isArray(raw.topics)&&Array.isArray(raw.tabs))tips={topics:raw.topics.map(String),tabs:raw.tabs.map(String),navs:Array.isArray(raw.navs)?raw.navs.map(String):[]};}catch(e){}
 function saveTips(){try{localStorage.setItem(TIPS,JSON.stringify(tips));}catch(e){}}
 // Tips are per device, not per save: once you know what a menu or action does, new journeys stay quiet.
 function learn(kind,id){if(id&&!tips[kind].includes(id)){tips[kind].push(id);saveTips();}}
@@ -29,27 +29,44 @@ if(G.ended)actionAudio.play(G.won?'win':'lose');else if(G.event)actionAudio.play
 save();render();toast(result.message);if(G.event)showEvent();else if(G.ended)showEnd();
 }
 const tabs=[['gather','compass','ลงมือ','วันนี้จะทำอะไร?'],['craft','tool','สร้าง','สร้างแคมป์ เครื่องมือ และทำอาหาร'],['inventory','pack','กระเป๋า','สัมภาระและคลังของพื้นที่'],['map','mountain','แผนที่','วางแผนเส้นทางและเดินทาง'],['quest','signal','ภารกิจ','เป้าหมาย ชิ้นส่วนวิทยุ และจุดสำรวจ'],['journal','book','บันทึก','บันทึกการเดินทาง']];
-function setTab(next,{focus=false}={}){const changed=tab!==next;if(changed)learn('tabs',tab);tab=next;renderTabs();renderActivity();if(changed){const top=$('activityTitle').getBoundingClientRect().top-$('mainNav').getBoundingClientRect().bottom;if(top<0||top>innerHeight*.6)$('activityTitle').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}if(focus)$('activityContent').focus({preventScroll:true});}
+function setTab(next,{focus=false}={}){const changed=tab!==next;if(changed)learn('tabs',tab);tab=next;learn('navs',next);renderObjective();renderTabs();renderActivity();if(changed){const top=$('activityTitle').getBoundingClientRect().top-$('mainNav').getBoundingClientRect().bottom;if(top<0||top>innerHeight*.6)$('activityTitle').scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});}if(focus)$('activityContent').focus({preventScroll:true});}
 function navBadges(){
   const craftable=Object.entries(D.recipes).filter(([k,r])=>!E.available(G,'craft',k)&&!(r.group==='camp'&&E.camp(G).structures.includes(k))).length,hazards=WorldRules.active(G).length,parts=['radio','battery','wire'].filter(k=>E.count(G,k)).length,weight=E.weight(G)/E.capacity(G);
   return {craft:G.difficulty!=='wild'&&craftable?[craftable,'ok',`สร้างได้ ${craftable} อย่าง`]:null,map:hazards?['!','warn',`เส้นทางถูกปิด ${hazards} จุด`]:null,inventory:weight>1?['!','warn','สัมภาระหนักเกิน']:null,quest:G.difficulty!=='wild'&&!E.available(G,'signal')?['!','ok','ส่งสัญญาณได้แล้ว']:parts?[`${parts}/3`,'',`ชิ้นส่วนวิทยุ ${parts}/3`]:null};
 }
-function renderTabs(){document.body.dataset.tab=tab;const badges=navBadges();$('mainNav').innerHTML=tabs.map(([k,i,t],j)=>{const b=badges[k];return `<button data-tab="${k}" class="${tab===k?'active':''}" aria-current="${tab===k?'page':'false'}" title="${t} (${j+1})${b?` • ${b[2]}`:''}">${icon(i)}<span class="nav-label">${t}</span>${b?`<span class="nav-badge ${b[1]}" aria-label="${esc(b[2])}">${b[0]}</span>`:''}</button>`;}).join('');}
+function renderTabs(){document.body.dataset.tab=tab;const badges=navBadges();$('mainNav').innerHTML=tabs.map(([k,i,t],j)=>{const b=badges[k];return `<button data-tab="${k}" class="${tab===k?'active':''}${pointNav===k?' nav-hint':''}" aria-current="${tab===k?'page':'false'}" title="${t} (${j+1})${b?` • ${b[2]}`:''}">${icon(i)}<span class="nav-label">${t}</span>${b?`<span class="nav-badge ${b[1]}" aria-label="${esc(b[2])}">${b[0]}</span>`:''}</button>`;}).join('');}
 // The single most useful thing to do next, with a one-click jump to where it happens.
 // Routine hints appear once per topic. Critical states and the end-of-journey card always show.
 const quiet=step=>!step.critical&&!step.newGame&&step.key!=='signal'&&tips.topics.includes(step.topic);
+// Bottom menus are introduced gradually: a hint that needs a menu the player has never opened points at it
+// instead of jumping there, and once the routine hints are quiet an unfamiliar menu is offered one at a time.
+const menuInfo={craft:['เพิงพัก หลุมไฟ และเครื่องมือ ตัวเลขบนเมนูคือจำนวนที่สร้างได้ตอนนี้','tool',()=>G.actions>=3],inventory:['ของที่แบก กินหรือใช้ของ และคลังของพื้นที่นี้','pack',()=>G.actions>=5],map:['เส้นทางไปพื้นที่อื่น น้ำ อาหาร และวัสดุอยู่คนละที่','mountain',()=>G.day>=2||G.actions>=9],quest:['เป้าหมายตั้งต้นและชิ้นส่วนวิทยุกู้ภัย','signal',()=>G.day>=2],journal:['ประวัติเหตุการณ์ทั้งหมดของการเดินทาง','book',()=>G.day>=3]};
+const navKnown=id=>id==='gather'||tips.navs.includes(id);
+const navName=id=>tabs.find(x=>x[0]===id)[2];
+let pointNav='';
 function nextStep(){
-  const step=SurvivalAdvice.next(G);if(!step||quiet(step))return null;
+  let step=SurvivalAdvice.next(G);
+  if(step&&quiet(step))step=null;
+  if(!step&&!G.ended&&!G.event&&G.difficulty!=='wild'){
+    const nav=Object.keys(menuInfo).find(k=>!navKnown(k)&&!tips.topics.includes('menu-'+k)&&menuInfo[k][2]());
+    if(nav)step={key:'menu-'+nav,topic:'menu-'+nav,icon:menuInfo[nav][1],kicker:'รู้จักเมนูด้านล่าง',title:`เมนู «${navName(nav)}»`,detail:menuInfo[nav][0],nav,intro:true};
+  }
+  if(!step)return null;
+  const point=step.nav&&!step.newGame&&!navKnown(step.nav)?step.nav:'';
   const attrs=step.newGame?'data-newgame':step.sleep?'data-open-sleep':[['nav',step.nav],['navfilter',step.filter],['navmap',step.map],['navaction',step.action],['navactionid',step.actionId],['navitem',step.item]].filter(([,v])=>v).map(([k,v])=>`data-${k}="${esc(v)}"`).join(' ');
-  return {...step,go:attrs+(step.critical||step.newGame?'':` data-tiptopic="${esc(step.topic)}"`)};
+  return {...step,point,go:point?'':attrs+(step.critical||step.newGame?'':` data-tiptopic="${esc(step.topic)}"`)};
+}
+function renderObjective(){
+const steps=[['เพิงพัก',Boolean(G.milestones.shelter)],['หลุมไฟ',Boolean(G.milestones.firepit)],['แหล่งน้ำ',G.visited.includes('river')||G.visited.includes('valley')]],step=nextStep();
+pointNav=step?.point||'';
+$('objective').hidden=!step;
+$('objective').innerHTML=step?`<div class="objective ${step.tone||''}"><div class="objective-icon">${icon(step.icon)}</div><div class="objective-text"><small>${step.critical||step.intro?'':'ลองดู • '}${esc(step.kicker)}</small><strong>${esc(step.title)}</strong><span>${esc(step.detail)}</span></div>${G.ended||G.difficulty==='wild'||step.critical||step.intro||steps.every(x=>x[1])?'':`<div class="objective-steps" aria-label="ภารกิจแรก ${steps.filter(x=>x[1]).length} จาก 3">${steps.map(([n,x])=>`<i class="step-dot ${x?'done':''}" title="${n}${x?' ✓':''}"></i>`).join('')}</div>`}${step.point?`<span class="objective-point">แตะ «${esc(navName(step.point))}»${icon('arrow')}</span>`:`<button class="button primary objective-go" ${step.go}>${esc(step.label)}${icon('arrow')}</button>`}${step.critical||step.newGame?'':`<button class="icon-button objective-dismiss" data-tip-dismiss="${esc(step.topic)}" aria-label="ไม่ต้องแนะนำเรื่องนี้อีก" title="ไม่ต้องแนะนำเรื่องนี้อีก">${icon('close')}</button>`}</div>`:'';
 }
 function render(){
 const sd=E.site(G),c=E.camp(G),w=D.weather[G.weather];
 $('topMeta').innerHTML=`<div class="hud-item">${icon('calendar')}<strong>วันที่ ${G.day}<small>/30</small></strong></div><div class="hud-item">${icon(G.time>=1140?'sleep':'clock')}<strong>${time(G.time)}</strong><small class="hud-extra">เหลือ ${duration(1320-G.time)}</small></div><div class="hud-item weather-meta" title="พรุ่งนี้: ${D.weather[G.forecast].name}">${icon(w.icon)}<strong>${E.temperature(G)}°</strong><small class="hud-extra">${w.name}</small></div>`;
 $('difficultyLabel').textContent=D.difficulties[G.difficulty].name;
-const steps=[['เพิงพัก',Boolean(G.milestones.shelter)],['หลุมไฟ',Boolean(G.milestones.firepit)],['แหล่งน้ำ',G.visited.includes('river')||G.visited.includes('valley')]],step=nextStep();
-$('objective').hidden=!step;
-$('objective').innerHTML=step?`<div class="objective ${step.tone||''}"><div class="objective-icon">${icon(step.icon)}</div><div class="objective-text"><small>${step.critical?'':'ลองดู • '}${esc(step.kicker)}</small><strong>${esc(step.title)}</strong><span>${esc(step.detail)}</span></div>${G.ended||G.difficulty==='wild'||step.critical||steps.every(x=>x[1])?'':`<div class="objective-steps" aria-label="ภารกิจแรก ${steps.filter(x=>x[1]).length} จาก 3">${steps.map(([n,x])=>`<i class="step-dot ${x?'done':''}" title="${n}${x?' ✓':''}"></i>`).join('')}</div>`}<button class="button primary objective-go" ${step.go}>${esc(step.label)}${icon('arrow')}</button>${step.critical||step.newGame?'':`<button class="icon-button objective-dismiss" data-tip-dismiss="${esc(step.topic)}" aria-label="ไม่ต้องแนะนำเรื่องนี้อีก" title="ไม่ต้องแนะนำเรื่องนี้อีก">${icon('close')}</button>`}</div>`:'';
+renderObjective();
 $('biomeLabel').innerHTML=icon('pin')+sd.subtitle;$('sceneCoord').textContent=`ALT ${sd.alt.toLocaleString()} M`;$('locationIndex').textContent=`พื้นที่ ${D.sites.indexOf(sd)+1}/7 • คุณอยู่ที่`;$('locationName').textContent=sd.name;$('locationDescription').textContent=sd.desc;
 $('sceneWeather').innerHTML=`${icon(w.icon)}<strong>${E.temperature(G)}°</strong><span>${w.name}</span><span class="forecast">พรุ่งนี้ ${D.weather[G.forecast].name}</span>`;
 const stats=[['health','heart','สุขภาพ','#c2ccab'],['energy','energy','พลังงาน','#d0bb7e'],['food','food','ความอิ่ม','#c79a79'],['water','water','น้ำในร่างกาย','#87b0b9'],['warmth','temp','ความอบอุ่น','#bbab84']];
@@ -221,7 +238,7 @@ const b=event.target.closest('button');if(!b||b.disabled)return;
 if(b.dataset.tiptopic)learn('topics',b.dataset.tiptopic);
 if(b.dataset.tipDismiss){learn('topics',b.dataset.tipDismiss);return render();}
 if(b.hasAttribute('data-coach-dismiss')){learn('tabs',tab);return renderActivity();}
-if(b.hasAttribute('data-tips-reset')){tips={topics:[],tabs:[]};saveTips();render();toast('จะแสดงคำแนะนำอีกครั้ง');return;}
+if(b.hasAttribute('data-tips-reset')){tips={topics:[],tabs:[],navs:[]};saveTips();render();toast('จะแสดงคำแนะนำอีกครั้ง');return;}
 if(b.dataset.nav){const nav=b.dataset.nav,filter=b.dataset.navfilter;if(nav==='craft')craftFilter=filter||'camp';if(nav==='inventory')invFilter=filter||'all';if(b.dataset.navmap)mapSelected=b.dataset.navmap;if($('modal').open&&modalMode!=='event')closeModal();setTab(nav,{focus:true});const target=b.dataset.navaction?$('activityContent').querySelector(`[data-action="${b.dataset.navaction}"]${b.dataset.navactionid?`[data-id="${b.dataset.navactionid}"]`:''}`):b.dataset.navitem?$('activityContent').querySelector(`[data-use="${b.dataset.navitem}"], [data-item="${b.dataset.navitem}"], [data-id="${b.dataset.navitem}"]`):null;if(target){target.scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});target.focus({preventScroll:true});}return;}
 if(b.dataset.tab){if(b.dataset.tab!==tab)actionAudio.play('tab');return setTab(b.dataset.tab);}
 if(b.hasAttribute('data-open-sleep'))return showSleep();
