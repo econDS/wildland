@@ -1,5 +1,6 @@
 'use strict';
 // Read-only advice. Never advances time, changes the save, or consumes RNG.
+// Each hint carries a `topic` (what it teaches). The UI shows a routine hint only until its topic is learned.
 const SurvivalAdvice=(()=>{
 const E=typeof Survival!=='undefined'?Survival:require('./engine.js');
 const D=typeof WILD!=='undefined'?WILD:require('./data.js');
@@ -7,7 +8,7 @@ function next(s){
   if(s.ended)return {key:'ended',icon:s.won?'signal':'leaf',kicker:'การเดินทางสิ้นสุด',title:s.won?'คุณได้กลับบ้านแล้ว':'ทุกการเดินทางสอนอะไรบางอย่าง',detail:`อยู่รอด ${s.day} วัน • สำรวจ ${s.visited.length} พื้นที่`,label:'เริ่มใหม่',newGame:true};
   if(s.event)return null;
   const c=E.camp(s),hard=s.difficulty==='wild',ready=(type,id)=>!E.available(s,type,id),has=id=>E.count(s,id)>0;
-  const hint=(key,icon,title,detail,target={},critical=false)=>({key,icon,title,detail,kicker:critical?'สถานะวิกฤต':'ดูแลการเดินทาง',label:'ไปจัดการ',tone:critical?'warn':'',critical,...target});
+  const hint=(key,icon,title,detail,target={},critical=false)=>({key,icon,title,detail,kicker:critical?'สถานะวิกฤต':'ดูแลการเดินทาง',label:'ไปจัดการ',tone:critical?'warn':'',critical,topic:target.action||key.split('-')[0],...target});
   const activity=(key,icon,title,detail,type,filter)=>hint(key,icon,title,detail,{nav:filter?'craft':'gather',filter,action:type});
   const supplies=(key,ids,filter,title)=>{
     const carried=ids.find(id=>has(id)&&ready('consume',id));

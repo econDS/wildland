@@ -172,3 +172,20 @@ test('cached tools retain their remaining durability across bulk inventory chang
   assert.equal(E.action(s,'take','axe').ok,true);
   assert.equal(s.tools.axe,3);E.validate(s);
 });
+
+test('every hint names a topic so the UI can stop repeating it once learned',()=>{
+  const states=[fresh(),fresh('explorer')];
+  const thirsty=fresh();thirsty.water=20;
+  const hungry=fresh();hungry.food=20;
+  const cold=fresh();cold.warmth=10;
+  const evening=fresh();evening.time=1150;
+  states.push(thirsty,hungry,cold,evening);
+  const topics=new Set();
+  for(const s of states){
+    const hint=Advice.next(s);
+    assert.ok(hint,'expected a hint');
+    assert.equal(typeof hint.topic,'string');assert.ok(hint.topic.length>0);
+    topics.add(hint.topic);
+  }
+  assert.ok(topics.size>1,'different needs should teach different topics');
+});

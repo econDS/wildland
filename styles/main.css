@@ -213,3 +213,15 @@ dialog{max-height:calc(88vh - var(--safe-top) - var(--safe-bottom))}
 @media(max-width:700px){body{padding-bottom:calc(var(--nav-h) + var(--safe-bottom))}.main-nav{padding-left:calc(4px + var(--safe-left));padding-right:calc(4px + var(--safe-right))}}
 /* Touch: no long-press callout or accidental text selection on controls. */
 button,.main-nav,.hud,.mini-vitals{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* Optional guidance: dismissible hint card and first-visit menu notes. */
+.objective-dismiss{flex-shrink:0;width:30px;height:30px;min-width:30px;opacity:.7;align-self:flex-start;margin:-4px -6px -4px -4px}
+.objective-dismiss svg{width:15px;height:15px}
+.objective-dismiss:hover,.objective-dismiss:focus-visible{opacity:1}
+.coach{display:flex;align-items:flex-start;gap:12px;margin:0 0 14px;padding:11px 8px 11px 14px;border:1px dashed #526840;border-radius:var(--radius);background:#1a2318;color:var(--muted)}
+.coach-icon{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;border-radius:9px;background:#26331f;color:var(--accent)}
+.coach-icon svg{width:17px;height:17px}
+.coach p{margin:0;flex:1;min-width:0;font-size:12px;line-height:1.6}
+.coach strong{color:var(--ink);font-weight:500;margin-right:4px}
+.coach .icon-button{flex-shrink:0;width:32px;height:32px}
+@media(max-width:700px){.objective-dismiss{position:absolute;top:6px;right:6px;margin:0}.objective-text{padding-right:26px}}
