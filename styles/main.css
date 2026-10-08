@@ -163,7 +163,7 @@ footer{max-width:1400px;margin:28px auto 0;padding:16px 24px}
   .header-row{padding:8px 16px 6px;gap:12px}
   .main-nav{padding:0 10px}
 }
-@media(max-width:700px){
+@media(max-width:700px),(max-height:500px) and (orientation:landscape){
   :root{--header-h:92px;--nav-h:64px}
   body{padding-bottom:calc(var(--nav-h) + var(--safe-bottom))}
   /* backdrop-filter would make the header the containing block of the fixed bottom nav */
@@ -225,3 +225,122 @@ button,.main-nav,.hud,.mini-vitals{-webkit-touch-callout:none;-webkit-user-selec
 .coach strong{color:var(--ink);font-weight:500;margin-right:4px}
 .coach .icon-button{flex-shrink:0;width:32px;height:32px}
 @media(max-width:700px){.objective-dismiss{position:absolute;top:6px;right:6px;margin:0}.objective-text{padding-right:26px}}
+
+/* ---- Mobile polish: content first, readable text, finger-sized targets ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overscroll-behavior-y:contain}
+button,a,input,select,summary{touch-action:manipulation}
+:root{--dim:#7f8a76}
+@media(max-width:700px),(max-height:500px) and (orientation:landscape){
+  /* Thai text stays at 11px or larger. Decorative Latin labels may be 10px. */
+.save-indicator,
+.objective-text small,
+.scene-weather,
+#timeRemaining,
+.action-desc,
+.card-cost,
+.card-cost .locked,
+.activity-note,
+.vital-value small,
+.condition,
+.camp-item small,
+.camp-empty,
+.camp-link,
+.text-button,
+.log-entry,
+footer,
+.filter,
+.material,
+.recipe-bottom,
+.recipe-bottom button,
+.item-description small,
+.item-actions .button,
+.map-node,
+.map-details p,
+.journal-list .log-entry small,
+.quest-part,
+.setting-row small,
+.end-summary small,
+.objective-text span,
+.scene-bottom p,
+.section-description,
+.world-warning p,
+.world-forecast p,
+.migration-note,
+.migration-note small,
+.world-reason,
+.world-controls .button,
+.landmark-body>p,
+.landmark-rewards>span,
+.landmark-body .gear-effect,
+.camp-maintenance>p,
+.maintenance-grid small,
+.camp-health-label,
+.atlas-heading>span,
+.atlas-entry small,
+.maintenance-grid .button,
+.log-entry small,
+.scene-status,
+.journey-goal-head span,
+.journey-goal p,
+.journey-goal>small,
+.route-summary,
+.route-summary strong,
+.route-summary small,
+.save-slot small,
+.slot-actions .button,
+.route-summary span,
+.hud-item strong small,
+.scene-weather .forecast,
+.main-nav button,
+.projection-stat>small{font-size:11px}
+  .eyebrow,.scene-bottom .eyebrow,.landmark-body .eyebrow,.landmark-art>small,.world-heading>small,.scene-coord,.location-chip,.nav-badge{font-size:10px}
+  .main-nav button{font-size:11px}
+  .objective-text small,.micro{font-size:11px}
+  /* Finger-sized targets: icon buttons keep their look but gain an invisible 44px hit area. */
+  .icon-button{position:relative}
+  .icon-button:after{content:'';position:absolute;inset:-5px}
+  .objective-dismiss{width:34px;height:34px;min-width:34px}
+  .coach .icon-button{width:36px;height:36px}
+  .filter{min-height:40px;padding:6px 14px}
+  .recipe-bottom button,.item-actions .button{min-height:40px;padding:6px 12px}
+  .item-actions .icon-button{min-width:44px;min-height:44px}
+  .map-details .button,.step-list .button{min-height:44px}
+  /* Content first: the landscape banner is a hero on the action page and a slim strip elsewhere. */
+  body:not([data-tab=gather]) .landscape{height:64px}
+  body:not([data-tab=gather]) .scene-top,body:not([data-tab=gather]) .scene-bottom p,body:not([data-tab=gather]) .scene-bottom .eyebrow,body:not([data-tab=gather]) .scene-weather .forecast{display:none}
+  body:not([data-tab=gather]) .scene-bottom{bottom:0;top:0;align-items:center}
+  body:not([data-tab=gather]) .scene-bottom h2{font-size:20px;margin:0}
+  body:not([data-tab=gather]) .scene-weather strong{font-size:15px}
+  /* The hint card is one compact row instead of a tall block. */
+  .objective{flex-wrap:nowrap;align-items:center;padding:10px 8px 10px 14px;gap:8px}
+  .objective:not(.warn) .objective-icon{display:none}
+  .objective-text{flex:1 1 auto;min-width:0;padding-right:0}
+  .objective-dismiss{position:static;margin:0;align-self:center}
+  .objective-text span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .objective-go{width:auto;flex-shrink:0;min-height:44px;padding:8px 12px}
+  .objective-steps{display:none}
+  .objective.warn .objective-go{min-height:44px}
+  #modalTitle{font-size:20px;line-height:1.35}
+  /* On the map page the map comes first; forest signals follow it. */
+  body[data-tab=map] #activityContent{display:flex;flex-direction:column}
+  body[data-tab=map] .world-outlook{order:5;margin:15px 0 0}
+}
+@media(max-width:380px){
+  .objective-go svg{display:none}
+}
+/* Short landscape phones: scrolling header, slim bottom bar, no giant banner. */
+@media(max-height:500px) and (orientation:landscape){
+  .app-header{position:static;padding-top:0}
+  .main-nav button{flex-direction:row;gap:6px;min-height:40px;padding:4px 2px}
+  .main-nav{padding-top:2px;padding-bottom:calc(2px + var(--safe-bottom))}
+  :root{--nav-h:46px}
+  .nav-badge{position:static;margin-left:-2px}
+  .landscape,body:not([data-tab=gather]) .landscape{height:120px}
+  .objective{margin-bottom:10px}
+}
+@media(max-width:340px){
+  .header-row{gap:6px;padding-left:10px;padding-right:10px}
+  .hud{gap:3px;min-width:0}.hud-item{padding:4px 6px;gap:4px}
+  .top-controls .icon-button{width:32px}
+}
